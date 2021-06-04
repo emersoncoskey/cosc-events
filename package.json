@@ -1,0 +1,32 @@
+{
+  "name": "cosc-events",
+  "version": "1.0.0",
+  "description": "A robust, strongly typed event system with no dependencies.",
+  "main": "./dist/index.js",
+  "files": [
+    "build/**/*",
+    "types/**/*"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "lint": "eslint \"**/*.ts\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EmersonCoskey/cosc-events.git"
+  },
+  "author": "cosc",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/EmersonCoskey/cosc-events/issues"
+  },
+  "homepage": "https://github.com/EmersonCoskey/cosc-events#readme",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^4.26.0",
+    "@typescript-eslint/parser": "^4.26.0",
+    "eslint": "^7.27.0",
+    "ts-node": "^10.0.0",
+    "typescript": "^4.3.2"
+  }
+}
