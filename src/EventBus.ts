@@ -1,22 +1,24 @@
-type EventHandler<T extends GameEvent> = (event: T) => void;
+type EventHandler<T> = (event: T) => void;
 
-interface EventBusEntry<T extends GameEvent> {
-    readonly eventBusIn: EventBus<T>,
+interface EventBusEntry<T, K> {
+    readonly eventBusIn: EventBus<T, K>,
 
-    readonly target?: string,
     readonly key: symbol,
+    readonly target?: K,
     readonly handler: EventHandler<T>,
 
     readonly unsubscribe: () => void,
 }
 
-/* ------- */
+class EventBus<T, K = undefined> {
+    readonly #handlers: Map<symbol, EventBusEntry<T, K>>;
+    readonly #targetFunc: (event: T) => K;
+    /*readonly #isOverrideFunc?: (event: T) => boolean*/
 
-class EventBus<T, K extends T[keyof TEvent]> {
-    readonly #handlers: Map<symbol, EventBusEntry<T>>;
-
-    constructor() {
-        this.#handlers = new Map<symbol, EventBusEntry<T>>();
+    constructor(targetFunc: (event: T) => K/*, isOverrideFunc?: (event: T) => boolean */) {
+        this.#handlers = new Map<symbol, EventBusEntry<T, K>>();
+        this.#targetFunc = targetFunc;
+        /*this.#isOverrideFunc = isOverrideFunc;*/
     }
 
     private getUnsubscribeFunction(key: symbol): () => void {
@@ -25,21 +27,24 @@ class EventBus<T, K extends T[keyof TEvent]> {
         };
     }
 
-    public emit(event: T, target?: string): void {
-        this.#handlers.forEach((entry, key) => {
-            if (target === undefined || key.description === undefined || target === key.description) {
-                entry.handler(event);
+    public emit(event: T): void {
+        const target: K = this.#targetFunc(event);
+        /*const isOverride: boolean = this.#isOverrideFunc ? this.#isOverrideFunc(event) : false;*/
+
+        this.#handlers.forEach((handlersEntry) => {
+            if (/*isOverride || */handlersEntry.target === undefined || target === handlersEntry.target) {
+                handlersEntry.handler(event);
             }
-        })
+        });
     }
 
-    public subscribe(handler: EventHandler<T>, target?: string): EventBusEntry<T> {
-        const key = Symbol(target);
+    public on(handler: EventHandler<T>, target?: K): EventBusEntry<T, K> {
+        const key = Symbol();
         const unsubscribeFunction = this.getUnsubscribeFunction(key);
         const entry = {
             eventBusIn: this, 
-            target: target,
             key: key, 
+            target: target,
             handler: handler, 
             unsubscribe: unsubscribeFunction,
         };
@@ -48,9 +53,33 @@ class EventBus<T, K extends T[keyof TEvent]> {
 
         return entry;
     }
+
+    public once(handler: EventHandler<T>, target: K): EventBusEntry<T, K> {
+        const key = Symbol();
+        const unsubscribeFunction = this.getUnsubscribeFunction(key);
+        const entry = {
+            eventBusIn: this,
+            key: key,
+            target: target,
+            handler: (event: T) => {
+                handler(event);
+                unsubscribeFunction();
+            }, 
+            unsubscribe: unsubscribeFunction,
+        };
+
+        this.#handlers.set(key, entry);
+
+        return entry;
+    }
+
+    public clear(): void {
+        this.#handlers.clear();
+    }
 }
 
-export default class GameAPI {
+
+/*export default class GameAPI {
     readonly exampleEventBus: EventBus<WorldObjectMove> = new EventBus<WorldObjectMove>();
     //TODO: constructor, add event buses, add forwarding of events
 
@@ -63,4 +92,4 @@ export default class GameAPI {
     static subscribe<T extends GameEvent>(handler: (event: T) => void): void {
         console.log(typeof handler);
     }
-}
+}*/

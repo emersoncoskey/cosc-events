@@ -1,0 +1,1 @@
+const dum = (thingy: undefined) => false;
