@@ -1,1 +1,3 @@
-const dum = (thingy: undefined) => false;
+import EventBus from './EventBus';
+
+export default EventBus;

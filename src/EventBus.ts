@@ -10,15 +10,15 @@ interface EventBusEntry<T, K> {
     readonly unsubscribe: () => void,
 }
 
-class EventBus<T, K = undefined> {
+export default class EventBus<T, K = undefined> {
     readonly #handlers: Map<symbol, EventBusEntry<T, K>>;
-    readonly #targetFunc: (event: T) => K;
-    /*readonly #isOverrideFunc?: (event: T) => boolean*/
+    readonly #targetFunc: (event: T) => K | undefined;
+    //readonly #isOverrideFunc: (event: T) => boolean;
 
-    constructor(targetFunc: (event: T) => K/*, isOverrideFunc?: (event: T) => boolean */) {
+    constructor(targetFunc?: (event: T) => K/*, isOverrideFunc?: (event: T) => boolean*/) {
         this.#handlers = new Map<symbol, EventBusEntry<T, K>>();
-        this.#targetFunc = targetFunc;
-        /*this.#isOverrideFunc = isOverrideFunc;*/
+        this.#targetFunc = targetFunc || (() => undefined);
+        //this.#isOverrideFunc = isOverrideFunc || (() => false);
     }
 
     private getUnsubscribeFunction(key: symbol): () => void {
@@ -28,11 +28,11 @@ class EventBus<T, K = undefined> {
     }
 
     public emit(event: T): void {
-        const target: K = this.#targetFunc(event);
-        /*const isOverride: boolean = this.#isOverrideFunc ? this.#isOverrideFunc(event) : false;*/
+        const target: K | undefined = this.#targetFunc(event);
+        //const isOverride: boolean = this.#isOverrideFunc(event);
 
-        this.#handlers.forEach((handlersEntry) => {
-            if (/*isOverride || */handlersEntry.target === undefined || target === handlersEntry.target) {
+        this.#handlers.forEach((handlersEntry: EventBusEntry<T, K>) => {
+            if (/*isOverride || */target === undefined || handlersEntry.target === undefined || target === handlersEntry.target) {
                 handlersEntry.handler(event);
             }
         });
@@ -43,9 +43,11 @@ class EventBus<T, K = undefined> {
         const unsubscribeFunction = this.getUnsubscribeFunction(key);
         const entry = {
             eventBusIn: this, 
+
             key: key, 
             target: target,
             handler: handler, 
+
             unsubscribe: unsubscribeFunction,
         };
 
@@ -54,17 +56,19 @@ class EventBus<T, K = undefined> {
         return entry;
     }
 
-    public once(handler: EventHandler<T>, target: K): EventBusEntry<T, K> {
+    public once(handler: EventHandler<T>, target?: K): EventBusEntry<T, K> {
         const key = Symbol();
         const unsubscribeFunction = this.getUnsubscribeFunction(key);
         const entry = {
             eventBusIn: this,
+
             key: key,
             target: target,
             handler: (event: T) => {
                 handler(event);
                 unsubscribeFunction();
             }, 
+
             unsubscribe: unsubscribeFunction,
         };
 
