@@ -4,7 +4,7 @@
   "description": "A robust, strongly typed event system with no dependencies.",
   "main": "./dist/index.js",
   "files": [
-    "build/**/*",
+    "dist/**/*",
     "types/**/*"
   ],
   "scripts": {
